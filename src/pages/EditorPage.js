@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import ACTIONS from '../Actions';
 import Client from '../components/Client';
 import Editor from '../components/Editor';
+import "../App.css";
 import { initSocket } from '../socket';
 import {
     useLocation,
@@ -10,6 +11,7 @@ import {
     Navigate,
     useParams,
 } from 'react-router-dom';
+import { FaPlay } from 'react-icons/fa';
 
 const EditorPage = () => {
     const socketRef = useRef(null);
@@ -18,6 +20,8 @@ const EditorPage = () => {
     const { roomId } = useParams();
     const reactNavigator = useNavigate();
     const [clients, setClients] = useState([]);
+    const [language, setLanguage] = useState('javascript');
+    const [output, setOutput] = useState('');
 
     useEffect(() => {
         const init = async () => {
@@ -36,7 +40,6 @@ const EditorPage = () => {
                 username: location.state?.username,
             });
 
-            // Listening for joined event
             socketRef.current.on(
                 ACTIONS.JOINED,
                 ({ clients, username, socketId }) => {
@@ -52,7 +55,6 @@ const EditorPage = () => {
                 }
             );
 
-            // Listening for disconnected
             socketRef.current.on(
                 ACTIONS.DISCONNECTED,
                 ({ socketId, username }) => {
@@ -87,12 +89,19 @@ const EditorPage = () => {
         reactNavigator('/');
     }
 
+    function runCode() {
+        const result = `Running ${language} code... 🚀`;
+        setOutput(result);
+        toast.success(result);
+    }
+
     if (!location.state) {
         return <Navigate to="/" />;
     }
 
     return (
         <div className="mainWrap">
+            {/* Sidebar */}
             <div className="aside">
                 <div className="asideInner">
                     <div className="logo">
@@ -119,7 +128,29 @@ const EditorPage = () => {
                     Leave
                 </button>
             </div>
+
             <div className="editorWrap">
+                <div className="editorHeader">
+                    <div className="languageContainer">
+                        <p>Select Language:</p>
+                        <select
+                            className="languageSelect"
+                            value={language}
+                            onChange={(e) => setLanguage(e.target.value)}
+                        >
+                            <option value="javascript">JavaScript</option>
+                            <option value="python">Python</option>
+                            <option value="java">Java</option>
+                            <option value="cpp">C++</option>
+                        </select>
+                    </div>
+                    <button className="runBtn" onClick={runCode}>
+                        <FaPlay />
+                        Run
+                    </button>
+                </div>
+
+                {/* Editor */}
                 <Editor
                     socketRef={socketRef}
                     roomId={roomId}
@@ -127,6 +158,14 @@ const EditorPage = () => {
                         codeRef.current = code;
                     }}
                 />
+
+                {/* here is the outPut section  */}
+                <div className="outputSection">
+                    <h3>Output:</h3>
+                    <div className="outputBox">
+                        <pre>{output || '// Your output will be shown here...'}</pre>
+                    </div>
+                </div>
             </div>
         </div>
     );
